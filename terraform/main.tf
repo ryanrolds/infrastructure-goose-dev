@@ -59,9 +59,19 @@ resource "digitalocean_app" "pathfinder-production" {
     }
 
     env {
+      key   = "PF__ENVIRONMENT__URL"
+      value = "https://pathfinder-production-cwkio.ondigitalocean.app"
+    }
+
+    env {
       key   = "APP_PASSWORD"
       value = random_password.setup_password.result
       type  = "SECRET"
+    }
+
+    env {
+      key   = "PF__PATHFINDER__ALLOW_SETUP"
+      value = 0
     }
 
     env {
@@ -138,25 +148,25 @@ resource "digitalocean_app" "pathfinder-production" {
       type  = "SECRET"
     }
 
-    env {
-      key   = "PF__ENVIRONMENT__SOCKET_HOST"
-      value = "sockets"
-    }
+    # env {
+    #   key   = "PF__ENVIRONMENT__SOCKET_HOST"
+    #   value = "pf-sockets"
+    # }
 
-    env {
-      key   = "PF__ENVIRONMENT__SOCKET_PORT"
-      value = "5555"
-    }
+    # env {
+    #   key   = "PF__ENVIRONMENT__SOCKET_PORT"
+    #   value = "5555"
+    # }
 
-    env {
-      key   = "PATHFINDER_SOCKET_HOST"
-      value = "sockets"
-    }
+    # env {
+    #   key   = "PATHFINDER_SOCKET_HOST"
+    #   value = "pf-sockets"
+    # }
 
-    env {
-      key   = "PATHFINDER_SOCKET_PORT"
-      value = "5555"
-    }
+    # env {
+    #   key   = "PATHFINDER_SOCKET_PORT"
+    #   value = "5555"
+    # }
 
     env {
       key   = "USER"
@@ -184,23 +194,6 @@ resource "digitalocean_app" "pathfinder-production" {
     }
 
     service {
-      name               = "sockets"
-      instance_count     = 1
-      instance_size_slug = "professional-xs"
-
-      dockerfile_path = "./pf-websocket.Dockerfile"
-
-      http_port      = 8020
-      internal_ports = [5555]
-      run_command    = "/usr/local/bin/php cmd.php --tcpHost 0.0.0.0"
-
-      git {
-        repo_clone_url = "https://github.com/ryanrolds/pathfinder-containers.git"
-        branch         = "digitalocean_app"
-      }
-    }
-
-    service {
       name               = "redis"
       instance_count     = 1
       instance_size_slug = "professional-xs"
@@ -220,6 +213,27 @@ resource "digitalocean_app" "pathfinder-production" {
       }
     }
 
+    # service {
+    #   name               = "pf-sockets"
+    #   instance_count     = 1
+    #   instance_size_slug = "professional-xs"
+
+    #   health_check {
+    #     port = 8020
+    #   }
+
+    #   http_port      = 8080
+    #   internal_ports = [5555, 8020]
+    #   run_command    = "/usr/local/bin/php cmd.php --tcpHost 0.0.0.0"
+
+    #   dockerfile_path = "./pf-websocket.Dockerfile"
+
+    #   git {
+    #     repo_clone_url = "https://github.com/ryanrolds/pathfinder-containers.git"
+    #     branch         = "digitalocean_app"
+    #   }
+    # }
+
     ingress {
       rule {
         component {
@@ -234,17 +248,6 @@ resource "digitalocean_app" "pathfinder-production" {
 
       rule {
         component {
-          name = "sockets"
-        }
-        match {
-          path {
-            prefix = "/sockets"
-          }
-        }
-      }
-
-      rule {
-        component {
           name = "redis"
         }
         match {
@@ -253,6 +256,17 @@ resource "digitalocean_app" "pathfinder-production" {
           }
         }
       }
+
+      # rule {
+      #   component {
+      #     name = "pf-sockets"
+      #   }
+      #   match {
+      #     path {
+      #       prefix = "/sockets"
+      #     }
+      #   }
+      # }
     }
   }
 }
@@ -274,11 +288,21 @@ resource "digitalocean_database_cluster" "pathfinder-production-db-cluster" {
 resource "digitalocean_database_db" "pathfinder-production-db-pathfinder" {
   cluster_id = digitalocean_database_cluster.pathfinder-production-db-cluster.id
   name       = "pathfinder"
+
+  lifecycle {
+    # do not destoy the DB
+    prevent_destroy = true
+  }
 }
 
 resource "digitalocean_database_db" "pathfinder-production-db-eve-universe" {
   cluster_id = digitalocean_database_cluster.pathfinder-production-db-cluster.id
   name       = "eve_universe"
+
+  lifecycle {
+    # do not destoy the DB
+    prevent_destroy = true
+  }
 }
 
 resource "digitalocean_database_user" "pathfinder-production-user-pathfinder" {
