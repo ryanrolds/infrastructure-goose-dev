@@ -18,6 +18,15 @@ terraform {
 # Define the DigitalOcean Personal Access Token
 variable "DO_PAT" {}
 
+variable "CCP_SSO_CLIENT_ID" {
+  type    = string
+  default = ""
+}
+variable "CCP_SSO_SECRET_KEY" {
+  type    = string
+  default = ""
+}
+
 # Configure the DigitalOcean Provider
 provider "digitalocean" {
   token = var.DO_PAT
@@ -139,12 +148,12 @@ resource "digitalocean_app" "pathfinder-production" {
 
     env {
       key   = "PF__ENVIRONMENT__CCP_SSO_CLIENT_ID"
-      value = "3b36fbb1e1d948389fe42b8e84e32d70"
+      value = var.CCP_SSO_CLIENT_ID
     }
 
     env {
       key   = "PF__ENVIRONMENT__CCP_SSO_SECRET_KEY"
-      value = "wdiBJNgV7NwSTK7vLZjWaCehLW2cmpfEYqr3osWJ"
+      value = var.CCP_SSO_SECRET_KEY
       type  = "SECRET"
     }
 
