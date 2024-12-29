@@ -11,7 +11,7 @@ terraform {
 
 variable "WANDERER_VERSION" {
   type    = string
-  default = "v1.20.1"
+  default = "v1.32.0"
 }
 
 variable "CLOAK_KEY" {
@@ -32,7 +32,6 @@ variable "CCP_SSO_SECRET_KEY" {
   type    = string
   default = ""
 }
-
 
 # Oauth2 Proxy variables
 
